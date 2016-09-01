@@ -10,9 +10,11 @@ help:
 
 temp: init
 
-init: TAG IP DB_PASS NAME PORT rmall mysqlinitCID owncloudinitCID
+reqs: TAG IP DB_USER DB_NAME DB_PASS NAME PORT rmall
 
-run: TAG IP DB_PASS NAME PORT rmall mysqlCID owncloudCID
+init: reqs mysqlinitCID owncloudinitCID
+
+run: reqs rmall mysqlCID owncloudCID
 
 next: grab rminit run
 
@@ -136,6 +138,21 @@ DB_PASS:
 		read -r -p "Enter the DB_PASS you wish to associate with this container [DB_PASS]: " DB_PASS; echo "$$DB_PASS">>DB_PASS; cat DB_PASS; \
 	done ;
 
+DB_NAME:
+	@while [ -z "$$DB_NAME" ]; do \
+		read -r -p "Enter the DB_NAME you wish to associate with this container [DB_NAME]: " DB_NAME; echo "$$DB_NAME">>DB_NAME; cat DB_NAME; \
+	done ;
+
+DB_HOST:
+	@while [ -z "$$DB_HOST" ]; do \
+		read -r -p "Enter the DB_HOST you wish to associate with this container [DB_HOST]: " DB_HOST; echo "$$DB_HOST">>DB_HOST; cat DB_HOST; \
+	done ;
+
+DB_USER:
+	@while [ -z "$$DB_USER" ]; do \
+		read -r -p "Enter the DB_USER you wish to associate with this container [DB_USER]: " DB_USER; echo "$$DB_USER">>DB_USER; cat DB_USER; \
+	done ;
+
 PORT:
 	@while [ -z "$$PORT" ]; do \
 		read -r -p "Enter the port you wish to associate with this container [PORT]: " PORT; echo "$$PORT">>PORT; cat PORT; \
@@ -172,10 +189,16 @@ mysqlcid-rmkill:
 
 # This one is ephemeral and will not persist data
 mysqlinitCID:
+	$(eval DB_NAME := $(shell cat DB_NAME))
+	$(eval DB_PASS := $(shell cat DB_PASS))
+	$(eval DB_USER := $(shell cat DB_USER))
 	docker run \
 	--cidfile="mysqlinitCID" \
 	--name `cat NAME`-mysqlinit \
-	-e MYSQL_ROOT_PASSWORD=`cat DB_PASS` \
+	--env="MYSQL_DATABASE=$(DB_NAME)" \
+	--env="MYSQL_USER=$(DB_USER)" \
+	--env="MYSQL_PASSWORD=$(DB_PASS)" \
+	--env="MYSQL_ROOT_PASSWORD=$(DB_PASS)" \
 	-d \
 	mysql:5.7
 
@@ -185,4 +208,3 @@ mysqlinitCID-rmkill:
 	-@docker kill `cat mysqlinitCID`
 	-@docker rm `cat mysqlinitCID`
 	-@rm mysqlinitCID
-
