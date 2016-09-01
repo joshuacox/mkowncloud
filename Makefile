@@ -10,7 +10,7 @@ help:
 
 temp: init
 
-init: TAG IP DB_PASS NAME PORT rmall mysqltemp owncloudinitCID
+init: TAG IP DB_PASS NAME PORT rmall mysqlinitCID owncloudinitCID
 
 run: TAG IP DB_PASS NAME PORT rmall mysqlCID owncloudCID
 
@@ -23,7 +23,7 @@ owncloudinitCID:
 	$(eval PORT := $(shell cat PORT))
 	docker run --name=$(NAME) \
 	-d \
-	--link=$(NAME)-mysqltemp:mysql \
+	--link=$(NAME)-mysqlinit:mysql \
 	--publish=$(IP):$(PORT):80 \
 	--cidfile="owncloudinitCID" \
 	$(TAG)
@@ -89,7 +89,7 @@ rm: kill rm-redimage rm-redcids
 
 rminit: killinit rm-initimage rm-initcids
 
-clean:  rm rminit rmmysqltemp rmmysql
+clean:  rm rminit rmmysqlinitCID rmmysql
 
 initenter:
 	docker exec -i -t `cat owncloudinitCID` /bin/bash
@@ -153,7 +153,7 @@ example:
 mysqlCID:
 	$(eval MYSQL_DATADIR := $(shell cat DATADIR))
 	ifeq ($(MYSQL_DATADIR),'')
-	$(error  "try make runmysqltemp and then make grab once you have initialized your installation")
+	$(error  "try make runmysqlinitCID and then make grab once you have initialized your installation")
 	endif
 	docker run \
 	--cidfile="mysqlCID" \
@@ -171,18 +171,18 @@ mysqlcid-rmkill:
 	-@rm mysqlcid
 
 # This one is ephemeral and will not persist data
-mysqltemp:
+mysqlinitCID:
 	docker run \
-	--cidfile="mysqltemp" \
-	--name `cat NAME`-mysqltemp \
+	--cidfile="mysqlinitCID" \
+	--name `cat NAME`-mysqlinit \
 	-e MYSQL_ROOT_PASSWORD=`cat DB_PASS` \
 	-d \
 	mysql:5.7
 
-rmmysqltemp: mysqltemp-rmkill
+rmmysqlinitCID: mysqlinitCID-rmkill
 
-mysqltemp-rmkill:
-	-@docker kill `cat mysqltemp`
-	-@docker rm `cat mysqltemp`
-	-@rm mysqltemp
+mysqlinitCID-rmkill:
+	-@docker kill `cat mysqlinitCID`
+	-@docker rm `cat mysqlinitCID`
+	-@rm mysqlinitCID
 
