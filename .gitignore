@@ -11,3 +11,4 @@ REDMINE_DATADIR
 DB_*
 MYSQL_*
 SMTP_*
+mysqltemp

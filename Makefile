@@ -89,7 +89,7 @@ rm: kill rm-redimage rm-redcids
 
 rminit: killinit rm-initimage rm-initcids
 
-clean:  rm rminit
+clean:  rm rminit rmmysqltemp rmmysql
 
 initenter:
 	docker exec -i -t `cat owncloudinitCID` /bin/bash
